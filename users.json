@@ -1,0 +1,101 @@
+{
+  "08012345678": {
+    "phone": "08012345678",
+    "name": "User 08012345678",
+    "ai_score": {
+      "reputation": 92,
+      "skill_score": 96
+    },
+    "loan_score": 94
+  },
+  "0801000178": {
+    "phone": "0801000178",
+    "name": "User 0801000178",
+    "ai_score": {
+      "reputation": 70,
+      "skill_score": 94
+    },
+    "loan_score": 82
+  },
+  "0801000278": {
+    "phone": "0801000278",
+    "name": "User 0801000278",
+    "ai_score": {
+      "reputation": 92,
+      "skill_score": 78
+    },
+    "loan_score": 85
+  },
+  "0801000378": {
+    "phone": "0801000378",
+    "name": "User 0801000378",
+    "ai_score": {
+      "reputation": 97,
+      "skill_score": 84
+    },
+    "loan_score": 90
+  },
+  "0801000478": {
+    "phone": "0801000478",
+    "name": "User 0801000478",
+    "ai_score": {
+      "reputation": 71,
+      "skill_score": 66
+    },
+    "loan_score": 68
+  },
+  "0801000578": {
+    "phone": "0801000578",
+    "name": "User 0801000578",
+    "ai_score": {
+      "reputation": 88,
+      "skill_score": 82
+    },
+    "loan_score": 85
+  },
+  "0801000678": {
+    "phone": "0801000678",
+    "name": "User 0801000678",
+    "ai_score": {
+      "reputation": 83,
+      "skill_score": 73
+    },
+    "loan_score": 78
+  },
+  "0801000778": {
+    "phone": "0801000778",
+    "name": "User 0801000778",
+    "ai_score": {
+      "reputation": 78,
+      "skill_score": 98
+    },
+    "loan_score": 88
+  },
+  "0801000878": {
+    "phone": "0801000878",
+    "name": "User 0801000878",
+    "ai_score": {
+      "reputation": 81,
+      "skill_score": 69
+    },
+    "loan_score": 75
+  },
+  "0801000978": {
+    "phone": "0801000978",
+    "name": "User 0801000978",
+    "ai_score": {
+      "reputation": 76,
+      "skill_score": 91
+    },
+    "loan_score": 83
+  },
+  "08010001078": {
+    "phone": "08010001078",
+    "name": "User 08010001078",
+    "ai_score": {
+      "reputation": 80,
+      "skill_score": 75
+    },
+    "loan_score": 77
+  }
+}
