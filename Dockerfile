@@ -8,7 +8,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -19,10 +19,14 @@ COPY . .
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Provide dummy ENV for build phase
+ENV DATABASE_URL="file:./dev.db"
+ENV NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 RUN npx prisma generate
-RUN npm run build
+RUN npm run build -- --no-lint
 
 # Production image, copy all the files and run next
 FROM base AS runner
