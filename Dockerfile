@@ -15,17 +15,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
+# Emergency Environment Variables
 ENV NEXT_TELEMETRY_DISABLED 1
-
-# Provide dummy ENV for build phase
+ENV NODE_ENV production
 ENV DATABASE_URL="file:./dev.db"
-ENV NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
+# Force build even with minor warnings
 RUN npx prisma generate
-RUN npm run build -- --no-lint
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
