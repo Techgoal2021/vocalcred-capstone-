@@ -6,8 +6,9 @@ WORKDIR /app
 
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
-# Ensure devDependencies are installed for building
-ENV NODE_ENV development
+
+# User requested NODE_ENV=production
+ENV NODE_ENV production
 ENV DATABASE_URL="file:./dev.db"
 
 # Provide dummy AT credentials for build-time initialization
@@ -15,9 +16,10 @@ ENV AT_USERNAME="sandbox"
 ENV AT_API_KEY="dummy"
 ENV GEMINI_API_KEY="dummy"
 
-# Install dependencies (includes devDependencies)
+# Install dependencies
+# We use --include=dev because build tools (Tailwind/PostCSS) are in devDependencies
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install --include=dev
 
 # Copy the rest of the application
 COPY . .
@@ -27,9 +29,6 @@ RUN npx prisma generate
 
 # Build the Next.js application
 RUN npm run build
-
-# Switch to production for runtime
-ENV NODE_ENV production
 
 # Start the application
 EXPOSE 3000
