@@ -1,31 +1,32 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-slim AS base
-
-# Install openssl for Prisma
-RUN apt-get update -y && apt-get install -y openssl
+FROM node:20
 
 WORKDIR /app
 
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+# Ensure devDependencies are installed for building
+ENV NODE_ENV development
 ENV DATABASE_URL="file:./dev.db"
 
-# Install dependencies
+# Install dependencies (includes devDependencies because NODE_ENV=development)
 COPY package.json package-lock.json* ./
 RUN npm install
 
-# Copy application code
+# Copy the rest of the application
 COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build Next.js app
+# Build the Next.js application
 RUN npm run build
 
-# Production Runner
+# Switch to production for runtime
+ENV NODE_ENV production
+
+# Start the application
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
