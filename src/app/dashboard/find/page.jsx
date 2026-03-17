@@ -34,7 +34,11 @@ export default function FindArtisansPage() {
         const res = await fetch("/api/users");
         if (res.ok) {
           const data = await res.json();
-          setUsers(data);
+          if (Array.isArray(data)) {
+            setUsers(data);
+          } else {
+            console.error("Users API returned non-array data:", data);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch users:", err);

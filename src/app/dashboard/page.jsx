@@ -143,7 +143,11 @@ export default function Dashboard() {
         }
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        setUsers(data);
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else {
+          console.error("Users API returned non-array data:", data);
+        }
       } catch (err) {
         console.error("Error fetching users:", err);
       } finally {
