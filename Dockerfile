@@ -35,12 +35,15 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/start.sh ./start.sh
 
-# Ensure the database is writable
-RUN touch /app/dev.db && chmod 666 /app/dev.db
+# Install Prisma in runner to ensure the CLI and engines are available
+RUN npm install prisma@5.22.0
+
+# Ensure the database and script are ready
+RUN touch /app/dev.db && chmod 666 /app/dev.db && chmod +x /app/start.sh
 
 EXPOSE 8080
 
-# Auto-initialize database on startup and start the standalone server
-# We use node server.js because of Next.js standalone output
-CMD npx prisma db push --accept-data-loss && node server.js
+# Use the startup script
+CMD ["./start.sh"]
