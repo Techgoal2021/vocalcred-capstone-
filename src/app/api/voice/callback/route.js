@@ -103,11 +103,27 @@ export async function POST(req) {
       }
 
       try {
-        await getSms().send({
-          to: [callerNumber],
-          message: smsMessage
-        });
-        console.log(`[AI VOICE SEARCH] SMS Sent to ${callerNumber}`);
+        const AT_API_KEY = process.env.AT_API_KEY;
+        const AT_USERNAME = process.env.AT_USERNAME;
+
+        if (AT_API_KEY && AT_USERNAME) {
+          const url = 'https://api.africastalking.com/version1/messaging';
+          const formData = new URLSearchParams();
+          formData.append('username', AT_USERNAME);
+          formData.append('to', callerNumber);
+          formData.append('message', smsMessage);
+
+          await fetch(url, {
+            method: 'POST',
+            headers: {
+              'apiKey': AT_API_KEY,
+              'Accept': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
+          });
+          console.log(`[AI VOICE SEARCH] SMS Sent to ${callerNumber}`);
+        }
       } catch (e) {
         console.error("[AI VOICE SEARCH] SMS Failed:", e);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, LogOut, User as UserIcon, Globe2, LayoutDashboard, Search, Smartphone, Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
