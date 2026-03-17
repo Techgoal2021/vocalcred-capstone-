@@ -10,7 +10,12 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV development
 ENV DATABASE_URL="file:./dev.db"
 
-# Install dependencies (includes devDependencies because NODE_ENV=development)
+# Provide dummy AT credentials for build-time initialization
+ENV AT_USERNAME="sandbox"
+ENV AT_API_KEY="dummy"
+ENV GEMINI_API_KEY="dummy"
+
+# Install dependencies (includes devDependencies)
 COPY package.json package-lock.json* ./
 RUN npm install
 
