@@ -9,7 +9,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 # User requested NODE_ENV=production
 ENV NODE_ENV production
-ENV DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL="file:/app/dev.db"
 
 # Provide dummy AT credentials for build-time initialization
 ENV AT_USERNAME="sandbox"
@@ -17,7 +17,6 @@ ENV AT_API_KEY="dummy"
 ENV GEMINI_API_KEY="dummy"
 
 # Install dependencies
-# We use --include=dev because build tools (Tailwind/PostCSS) are in devDependencies
 COPY package.json package-lock.json* ./
 RUN npm install --include=dev
 
@@ -35,4 +34,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["npm", "start"]
+# Auto-initialize database on startup and then start server
+CMD npx prisma db push --accept-data-loss && npm start
