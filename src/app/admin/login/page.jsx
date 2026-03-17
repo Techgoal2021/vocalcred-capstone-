@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, ArrowRight, Loader2, Mail, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verifyRequest = searchParams.get('verifyRequest');
@@ -171,5 +171,17 @@ export default function AdminLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-[#CC5500]" />
+      </div>
+    }>
+      <AdminLoginContent />
+    </Suspense>
   );
 }
