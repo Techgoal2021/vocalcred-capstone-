@@ -1,12 +1,17 @@
 import africastalking from 'africastalking';
 
-const atCredentials = {
-  apiKey: process.env.AT_API_KEY,
-  username: process.env.AT_USERNAME,
-};
-
-const AT = africastalking(atCredentials);
-const voice = AT.VOICE;
+// Lazy load Voice to prevent build-time crashes
+let voice = null;
+function getVoice() {
+  if (!voice) {
+    const AT = africastalking({
+      apiKey: process.env.AT_API_KEY || 'dummy',
+      username: process.env.AT_USERNAME || 'sandbox',
+    });
+    voice = AT.VOICE;
+  }
+  return voice;
+}
 
 export async function triggerVoiceCall(phone, type = "registration") {
   try {
@@ -22,7 +27,7 @@ export async function triggerVoiceCall(phone, type = "registration") {
       clientRequestId: `vocalcred:${type}:${phone}`
     };
 
-    const result = await voice.call(options);
+    const result = await getVoice().call(options);
     console.log(`[VOICE TRIGGER] Call initiated for ${phone} (Type: ${type})`, result);
     return result;
   } catch (error) {

@@ -4,12 +4,18 @@ import africastalking from 'africastalking';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const atCredentials = {
-  apiKey: process.env.AT_API_KEY,
-  username: process.env.AT_USERNAME,
-};
-const AT = africastalking(atCredentials);
-const sms = AT.SMS;
+// Lazy load Africa's Talking to prevent build-time crashes
+let sms = null;
+function getSms() {
+  if (!sms) {
+    const AT = africastalking({
+      apiKey: process.env.AT_API_KEY || 'dummy',
+      username: process.env.AT_USERNAME || 'sandbox',
+    });
+    sms = AT.SMS;
+  }
+  return sms;
+}
 
 export async function POST(req) {
   try {
@@ -97,7 +103,7 @@ export async function POST(req) {
       }
 
       try {
-        await sms.send({
+        await getSms().send({
           to: [callerNumber],
           message: smsMessage
         });

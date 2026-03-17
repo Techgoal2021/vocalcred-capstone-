@@ -2,13 +2,18 @@ import { prisma, normalizePhone } from '@/lib/db';
 import { triggerVoiceCall } from '@/lib/at_voice';
 import africastalking from 'africastalking';
 
-// Initialize Africa's Talking
-const atCredentials = {
-  apiKey: process.env.AT_API_KEY,
-  username: process.env.AT_USERNAME,
-};
-const AT = africastalking(atCredentials);
-const sms = AT.SMS;
+// Lazy load Africa's Talking to prevent build-time crashes
+let sms = null;
+function getSms() {
+  if (!sms) {
+    const AT = africastalking({
+      apiKey: process.env.AT_API_KEY || 'dummy',
+      username: process.env.AT_USERNAME || 'sandbox',
+    });
+    sms = AT.SMS;
+  }
+  return sms;
+}
 
 const SKILLS = {
   "1": "Plumber",
@@ -188,7 +193,7 @@ export async function POST(req) {
           } else if (effectiveArgs.length === 2) {
             const clientPhone = effectiveArgs[1];
             try {
-              await sms.send({
+              await getSms().send({
                 to: [clientPhone],
                 message: `VocalCred: You recently worked with ${user.name}. Rate 1-5 to verify.`
               });

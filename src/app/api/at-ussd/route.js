@@ -1,13 +1,18 @@
 import { prisma } from '@/lib/db';
 import africastalking from 'africastalking';
 
-// Initialize Africa's Talking
-const atCredentials = {
-  apiKey: process.env.AT_API_KEY,
-  username: process.env.AT_USERNAME,
-};
-const AT = africastalking(atCredentials);
-const sms = AT.SMS;
+// Lazy load Africa's Talking to prevent build-time crashes
+let sms = null;
+function getSms() {
+  if (!sms) {
+    const AT = africastalking({
+      apiKey: process.env.AT_API_KEY || 'dummy',
+      username: process.env.AT_USERNAME || 'sandbox',
+    });
+    sms = AT.SMS;
+  }
+  return sms;
+}
 
 const SKILLS = {
   "1": "Plumber",
@@ -86,7 +91,7 @@ export async function POST(req) {
           const clientPhone = args[1];
           
           try {
-            await sms.send({
+            await getSms().send({
               to: [clientPhone],
               message: `VocalCred: You recently worked with ${user.name} (${user.vocalcred_id}), a ${user.skill}. Please reply with a rating from 1 to 5 to verify their service.`
             });
@@ -101,7 +106,7 @@ export async function POST(req) {
          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
          const uploadLink = `${baseUrl}/upload/${phone}`;
          try {
-           await sms.send({
+           await getSms().send({
              to: [phone],
              message: `Secure VocalCred Link: Please click here to record your voice sample for AI analysis: ${uploadLink}`
            });
