@@ -1,14 +1,11 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20
-
+# Stage 1: Install dependencies and build
+FROM node:20 AS builder
 WORKDIR /app
 
-# Disable Next.js telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# User requested NODE_ENV=production
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 ENV DATABASE_URL="file:/app/dev.db"
 
 # Provide dummy AT credentials for build-time initialization
@@ -16,23 +13,32 @@ ENV AT_USERNAME="sandbox"
 ENV AT_API_KEY="dummy"
 ENV GEMINI_API_KEY="dummy"
 
-# Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm install --include=dev
 
-# Copy the rest of the application
 COPY . .
-
-# Generate Prisma client
 RUN npx prisma generate
-
-# Build the Next.js application
 RUN npm run build
 
-# Start the application
-EXPOSE 3000
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+# Stage 2: Production runner
+FROM node:20-slim AS runner
+WORKDIR /app
 
-# Auto-initialize database on startup and then start server
-CMD npx prisma db push --accept-data-loss && npm start
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL="file:/app/dev.db"
+ENV PORT=8080
+ENV HOSTNAME="0.0.0.0"
+
+# Copy build artifacts
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 8080
+
+# Auto-initialize database on startup and start the standalone server
+# We use node server.js because of Next.js standalone output
+CMD npx prisma db push --accept-data-loss && node server.js

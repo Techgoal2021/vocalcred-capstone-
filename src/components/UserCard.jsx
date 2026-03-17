@@ -9,8 +9,8 @@ export default function UserCard({ user }) {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const isPartner = session?.user?.role === "CLIENT";
-  const isClient = user.role === "CLIENT";
-  const isSelf = session?.user?.phone === user.phone;
+  const isClient = user?.role === "CLIENT";
+  const isSelf = session?.user?.phone === user?.phone;
   const canRate = (isAdmin || isPartner) && !isSelf;
 
   const [isPlaying, setIsPlaying] = useState(false);

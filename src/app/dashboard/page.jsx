@@ -41,12 +41,18 @@ export default function Dashboard() {
   const router = useRouter();
 
   const currentUser = useMemo(() => {
-    return users.find((u) => u.phone === session?.user?.phone);
+    if (!Array.isArray(users) || !session?.user?.phone) return null;
+    return users.find((u) => u.phone === session.user.phone);
   }, [users, session]);
 
-  const filteredUsers = users.filter((u) => 
-    u.phone.includes(searchQuery) || (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) || (u.vocalcred_id && u.vocalcred_id.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredUsers = useMemo(() => {
+    if (!Array.isArray(users)) return [];
+    return users.filter((u) => 
+      u?.phone?.includes(searchQuery) || 
+      (u?.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+      (u?.vocalcred_id && u.vocalcred_id.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [users, searchQuery]);
 
   // Edit Profile State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -150,6 +156,7 @@ export default function Dashboard() {
         }
       } catch (err) {
         console.error("Error fetching users:", err);
+        setUsers([]); // Reset to empty array on error to prevent filter crashes
       } finally {
         setLoading(false);
       }
