@@ -1,10 +1,11 @@
-node_modules
-.next
-.git
+/node_modules
+/.next
+/.git
+/public/voice_*
+/public/*.mp3
+/public/*.webm
 Dockerfile
 .dockerignore
-.env
-.env.local
-.env.production
+.env*
 README.md
 LICENSE
