@@ -47,32 +47,29 @@ export async function POST(req) {
     let responseStr = "END Invalid input.";
 
     // 1. Language Selection (Global Entrance)
-    if (!user.language && args.length === 0) {
-      return new Response("CON Welcome to VocalCred\nSelect Language:\n1. English\n2. Pidgin\n3. Hausa\n4. Igbo\n5. Yoruba", { 
-        status: 200, headers: { 'Content-Type': 'text/plain' } 
-      });
-    }
-
-    if (!user.language && args.length === 1) {
+    if (!user.language) {
+      if (args.length === 0) {
+        return new Response("CON Welcome to VocalCred\nSelect Language:\n1. English\n2. Pidgin\n3. Hausa\n4. Igbo\n5. Yoruba", { 
+          status: 200, headers: { 'Content-Type': 'text/plain' } 
+        });
+      }
+      
       const langMap = { "1": "en", "2": "pg", "3": "ha", "4": "ig", "5": "yo" };
-      const lang = langMap[args[0]] || "en";
-      await prisma.user.update({ where: { phone }, data: { language: lang } });
+      const selectedLang = langMap[args[0]];
       
-      const welcomeMap = {
-        en: "Language set. Press 1 to continue.",
-        pg: "Language don set. Press 1 to continue.",
-        ha: "An seta yare. Danna 1 don ci gaba.",
-        ig: "Edobere asụsụ. Pịa 1 ka ị gaa n'ihu.",
-        yo: "A ti yan ede. Tẹ 1 lati tẹsiwaju."
-      };
-      
-      return new Response(`CON ${welcomeMap[lang]}`, { 
-        status: 200, headers: { 'Content-Type': 'text/plain' } 
-      });
+      if (selectedLang) {
+        await prisma.user.update({ where: { phone }, data: { language: selectedLang } });
+        user.language = selectedLang;
+        // Do NOT return here; proceed to the menu for the current text
+      } else {
+        return new Response("CON Invalid selection.\n1. English\n2. Pidgin\n3. Hausa\n4. Igbo\n5. Yoruba", { 
+          status: 200, headers: { 'Content-Type': 'text/plain' } 
+        });
+      }
     }
 
-    // Adjust args if language was just set
-    const effectiveArgs = (args.length > 0 && ["1","2","3","4","5"].includes(args[0]) && !user.vocalcred_id) ? args.slice(1) : args;
+    // Logic: If the first arg was a language selector, we strip it for the rest of the flow
+    const effectiveArgs = (args.length > 0 && ["1","2","3","4","5"].includes(args[0])) ? args.slice(1) : args;
     const lang = user.language || "en";
 
     const strings = {
@@ -89,47 +86,23 @@ export async function POST(req) {
     if (!user.vocalcred_id) {
       if (effectiveArgs.length === 0) {
         responseStr = `CON ${s.welcome} to VocalCred\n1. ${s.reg}\n2. ${s.voice_reg}\n3. ${s.voice_search}\n4. ${s.score}`;
-      } else if (effectiveArgs[0] === "2") {
-        // TRIGGER VOICE REGISTRATION
-        await prisma.user.update({
-          where: { phone },
-          data: { pendingVoiceAction: "registration" }
-        });
-        await triggerVoiceCall(phone, "registration");
-        return new Response(`END VocalCred will call you now to record your profile.`, {
-          status: 200, headers: { 'Content-Type': 'text/plain' }
-        });
-      } else if (effectiveArgs[0] === "3") {
-        // TRIGGER VOICE SEARCH
-        await prisma.user.update({
-          where: { phone },
-          data: { pendingVoiceAction: "search" }
-        });
-        await triggerVoiceCall(phone, "search");
-        return new Response(`END VocalCred will call you now. Please state who you are looking for.`, {
-          status: 200, headers: { 'Content-Type': 'text/plain' }
-        });
       } else if (effectiveArgs[0] === "1") {
         if (effectiveArgs.length === 1) {
           responseStr = `CON ${s.role}`;
         } else if (effectiveArgs.length === 2) {
-          // Setting the role
           const roleSelection = effectiveArgs[1];
           const isClient = roleSelection === "2";
-          responseStr = `CON ${isClient ? (lang === 'en' ? 'Enter Business/Name:' : s.name) : s.name}`;
+          responseStr = `CON ${isClient ? (lang === 'en' ? 'Enter Business Name:' : s.name) : s.name}`;
         } else if (effectiveArgs.length === 3) {
           const roleSelection = effectiveArgs[1];
           if (roleSelection === "2") {
-            // Partners now go to activity step
              responseStr = `CON ${lang === 'en' ? 'What do you do (Activity):' : 'Wani aiki kuke yi:'}`;
           } else {
-            // Artisan path: continue to skill selection
             responseStr = `CON ${s.work}\n1. Plumber\n2. Electrician\n3. Tailor\n4. Carpenter\n5. Other`;
           }
         } else if (effectiveArgs.length === 4) {
           const roleSelection = effectiveArgs[1];
           if (roleSelection === "2") {
-             // Final Partner Registration
              const name = effectiveArgs[2];
              const activity = effectiveArgs[3];
              const vcId = `VP-${Math.floor(Math.random() * 900) + 100}`;
@@ -146,44 +119,46 @@ export async function POST(req) {
              });
              responseStr = `END Partner ${name} (${activity}) registered. ID: ${vcId}.`;
           } else {
-            // Final Artisan Registration
             const name = effectiveArgs[2];
             const skillIndex = effectiveArgs[3];
-            const skill = SKILLS[skillIndex] || "Artisan";
+            const skill = SKILLS[skillIndex] || skillIndex || "Artisan";
             const vcId = `VC-${Math.floor(Math.random() * 900) + 100}`;
             
-            const simSwapDetected = false;
-            const initialRep = simSwapDetected ? 400 : (Math.floor(Math.random() * (850 - 650)) + 650);
-
             await prisma.user.update({
               where: { phone },
               data: {
                 name: name,
                 vocalcred_id: vcId,
-                skill: SKILLS[skillIndex] || skillIndex || "Artisan",
+                skill: skill,
                 role: "ARTISAN",
                 jobs_completed: 0,
                 avg_rating: 0,
                 repeat_clients: 0,
-                reputation: initialRep,
+                reputation: 700,
                 has_voice: false
               }
             });
-            
             responseStr = `END ${s.welcome} ${name}. ID: ${vcId}. Security: ${s.success}.`;
           }
         }
       } else if (effectiveArgs[0] === "2") {
-        responseStr = `END ${lang === 'en' ? 'Register first.' : 'Abeg register first.'}`;
+        await prisma.user.update({ where: { phone }, data: { pendingVoiceAction: "registration" } });
+        await triggerVoiceCall(phone, "registration");
+        responseStr = `END VocalCred will call you now to record your profile.`;
+      } else if (effectiveArgs[0] === "3") {
+        await prisma.user.update({ where: { phone }, data: { pendingVoiceAction: "search" } });
+        await triggerVoiceCall(phone, "search");
+        responseStr = `END VocalCred will call you now. Please state who you are looking for.`;
+      } else if (effectiveArgs[0] === "4") {
+        responseStr = `END ${s.score}: 0 (Not registered yet)`;
       }
     } 
     // Flow for Registered Users
     else {
       if (effectiveArgs.length === 0) {
-        const welcomeBackMsg = user.role === "CLIENT" 
+        responseStr = user.role === "CLIENT" 
           ? `CON Partner ${user.name}\n1. Find Artisan\n2. Check Reputation\n3. Reset Lang`
           : `CON ${s.welcome} back ${user.name}\n1. Request Rating\n2. Check score\n3. Reset Lang`;
-        responseStr = welcomeBackMsg;
       } else if (effectiveArgs[0] === "1") {
         if (user.role === "CLIENT") {
            responseStr = "END Search now live! Browse scores and ratings at: vocalcred.ai/dashboard/find";
@@ -192,21 +167,45 @@ export async function POST(req) {
             responseStr = `CON ${lang === 'ha' ? 'Shigar da lambar abokin ciniki:' : 'Enter Client Phone:'}`;
           } else if (effectiveArgs.length === 2) {
             const clientPhone = effectiveArgs[1];
+            console.log(`[USSD] Sending rating request SMS to: ${clientPhone}`);
+            
             try {
-              await getSms().send({
-                to: [clientPhone],
-                message: `VocalCred: You recently worked with ${user.name}. Rate 1-5 to verify.`
-              });
-            } catch (e) {}
-            responseStr = `END Request sent to ${clientPhone}.`;
+              const AT_API_KEY = process.env.AT_API_KEY;
+              const AT_USERNAME = process.env.AT_USERNAME;
+              const message = `VocalCred: You recently worked with ${user.name}. View their profile and rate them at: https://vocalcred-capstone-37668518280.us-central1.run.app/dashboard`;
+
+              if (AT_API_KEY && AT_USERNAME) {
+                const url = 'https://api.africastalking.com/version1/messaging';
+                const formData = new URLSearchParams();
+                formData.append('username', AT_USERNAME);
+                formData.append('to', clientPhone);
+                formData.append('message', message);
+
+                await fetch(url, {
+                  method: 'POST',
+                  headers: {
+                    'apiKey': AT_API_KEY,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: formData
+                });
+                console.log(`[AT SMS SUCCESS] Rating request sent to ${clientPhone}`);
+              }
+              responseStr = `END Request sent to ${clientPhone}.`;
+            } catch (e) {
+              console.error(`[USSD] SMS Error:`, e);
+              responseStr = `END Try again later. SMS service busy.`;
+            }
           }
         }
-      } else if (effectiveArgs[0] === "2") {
-        const score = user.role === "CLIENT" ? user.payer_score : user.reputation;
+      }
+ else if (effectiveArgs[0] === "2") {
+        const score = user.role === "CLIENT" ? (user.payer_score || 0) : (user.reputation || 0);
         responseStr = `END ${s.score}: ${score}`;
       } else if (effectiveArgs[0] === "3") {
          await prisma.user.update({ where: { phone }, data: { language: null } });
-         responseStr = "END Language reset.";
+         responseStr = "END Language reset. Redial to select new language.";
       }
     }
 
